@@ -10,7 +10,7 @@ uriPrefix = "https://api.github.com/repos/msnbc-devices/"
 uriSuffix = "?access_token=ACCESS_TOKEN"
 
 
-### configure range and sample rate here
+### configure range here
 max_range_in_days = 14 #2 weeks
 max_datum_age_in_seconds = max_range_in_days * 24 * 60 * 60 #convert max range to seconds
 ###
@@ -53,7 +53,7 @@ SCHEDULER.every '15m', :first_in => 0 do |job|
         end
       end
       if aData.nil?
-        aData = [] #yml file for this milestone was empty or not found
+        aData = [] #yml file for this milestone was empty or not found, or all data was stale (deleted by delete_if)
       end
         
       ### add new data point
