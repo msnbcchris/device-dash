@@ -11,7 +11,7 @@ uriSuffix = "?access_token=ACCESS_TOKEN"
 
 
 ### configure range here
-max_range_in_days = 14 #2 weeks
+max_range_in_days = 15 #2 weeks - 15 days will force the x axis to display month and day, not just day.
 max_datum_age_in_seconds = max_range_in_days * 24 * 60 * 60 #convert max range to seconds
 ###
 
@@ -61,13 +61,9 @@ SCHEDULER.every '15m', :first_in => 0 do |job|
       aData.push({ "x" => serverTime, "y" => milestoneCount })
       puts "New Data Point for #{repoName} Milestone #{milestoneNumber}, #{milestoneTitle}: #{aData.last}"
         
-      ### is this an android milestone?
-      # assuming yes if repo name begins with "Android"
-      isMilestoneAndroid = (repoName.index("Android") == 0)
-        
       ### send entire data set to widget including title and whether this is an Android repo
       eventName = "issuecount-#{repoName}-#{milestoneNumber}" # e.g. issuecount-Android-NewsApps-21
-      send_event("#{eventName}",  points: aData, title: "#{milestoneTitle}", isAndroid: "#{isMilestoneAndroid}" )
+      send_event("#{eventName}",  points: aData, title: "#{milestoneTitle}" )
         
       ### save out the current data to history file
       historyFileWrite = File.open(filename, 'w')

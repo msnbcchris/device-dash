@@ -1,10 +1,10 @@
 // ----------------------------------------------------------------------------
 // Sass declarations
 // ----------------------------------------------------------------------------
-$background-color:  #007aff;
+$background-color:  #dc5945;
 
 $title-color:       rgba(255, 255, 255, 0.7);
-$moreinfo-color:    rgba(255, 255, 255, 0.3);
+$moreinfo-color:    rgba(255, 255, 255, 1);
 $tick-color:        rgba(0, 0, 0, 0.4);
 
 
@@ -66,4 +66,8 @@ $tick-color:        rgba(0, 0, 0, 0.4);
 
 .androidcolor {
   background-color: #a4c739;
+}
+
+.ioscolor {
+  background-color: #007aff;
 }
