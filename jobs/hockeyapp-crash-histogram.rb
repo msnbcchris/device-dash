@@ -27,8 +27,10 @@ SCHEDULER.every '15m', :first_in => 0 do |job|
  		#get info on latest version for this app_id
 		versions = hashFromURI("https://rink.hockeyapp.net/api/2/apps/#{app_id}/app_versions")
 
-		#get app's title and strip off platform and release info
-  	app_title = versions["app_versions"][0]["title"] #just get app title from 0th version
+		#get app's version number, title and strip off platform and release info
+		#just get from 0th version
+		version_number = versions["app_versions"][0]["shortversion"]
+  	app_title = versions["app_versions"][0]["title"]
   	app_title.gsub!("Android","")
   	app_title.gsub!("iOS","")
   	app_title.gsub!("Retail","")
@@ -59,6 +61,6 @@ SCHEDULER.every '15m', :first_in => 0 do |job|
 		#send event - event name is just hockeyapp app id
 		event_name = "histogram-#{app_id}"
 #		send_event("#{eventName}",  points: aData, title: "#{milestoneTitle}", isAndroid: "#{isMilestoneAndroid}" )
-  	send_event("#{event_name}", { points: aData, title: "#{app_title} - Daily Crash Count"})
+  	send_event("#{event_name}", { points: aData, title: "#{app_title} #{version_number} - Daily Crash Count"})
  	end #app_ids.each
 end
