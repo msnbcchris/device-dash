@@ -11,7 +11,7 @@ uriSuffix = "?access_token=ACCESS_TOKEN"
 
 
 ### configure range here
-max_range_in_days = 14 #2 weeks - 15 days will force the x axis to display month and day, not just day, but only 1 week increments.
+max_range_in_days = 13 #2 weeks - 15 days will force the x axis to display month and day, not just day, but only 1 week increments.
 max_datum_age_in_seconds = max_range_in_days * 24 * 60 * 60 #convert max range to seconds
 ###
 
