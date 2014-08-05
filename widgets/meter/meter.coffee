@@ -5,10 +5,18 @@ class Dashing.Meter extends Dashing.Widget
   constructor: ->
     super
     @observe 'value', (value) ->
-      $(@node).find(".meter").val(value).trigger('change')
+      meter = $(@node).find(".meter")
+      meter.val(value).trigger('change')
+      if @get('criticalvalue')
+        if parseInt(value) > @get('criticalvalue')
+          statuscolor = "chartreuse"
+        else
+          statuscolor = "red"
+        meter.trigger('configure',{"fgColor":statuscolor})
 
   ready: ->
     meter = $(@node).find(".meter")
-    meter.attr("data-bgcolor", meter.css("background-color"))
+    if @get('criticalvalue') then bgcolor = "black" else bgcolor = meter.css("background-color")
+    meter.attr("data-bgcolor", bgcolor)
     meter.attr("data-fgcolor", meter.css("color"))
     meter.knob()
