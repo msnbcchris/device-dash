@@ -8,12 +8,19 @@ uriSuffixStatus = "/lastCompletedBuild/api/json?tree=result"
 coverage_type_ios = :cobertura
 coverage_type_android = :emma
 
+current_coverage_values = {}
+
 jenkins_jobs = [
 	"Unit-NEWS-iOS",
 	"Unit-TODAY-iOS",
 	"Unit-NEWS-Android",
 	"Unit-TODAY-Android"
 ]
+
+#some initialization
+jenkins_jobs.each do |jj|
+	current_coverage_values[jj] = 0
+end
 
 # :first_in sets how long it takes before the job is first run. In this case, it is run immediately
 SCHEDULER.every '15m', :first_in => 0 do |job|
@@ -66,18 +73,23 @@ SCHEDULER.every '15m', :first_in => 0 do |job|
 				elsif coverage_type == coverage_type_android
 					#Android
 					#result is coverage percentage
-	#				puts puts "#{coverageURI}: #{coverageResults["methodCoverage"]["percentage"]}"
+	#				puts "#{coverageURI}: #{coverageResults["methodCoverage"]["percentage"]}"
 					coverage_value = coverageResults["methodCoverage"]["percentageFloat"]
 				end
-				coverage_value = coverage_value.round()
+				last_coverage_value = current_coverage_values[jenkins_job]
+				current_coverage_values[jenkins_job] = coverage_value #full-precision float
+				coverage_value = coverage_value.round() #rounded to the nearest 1
 				puts "Sending jenkins-codecoverage-#{jenkins_job}, value: #{coverage_value}"
 	  			send_event("jenkins-codecoverage-#{jenkins_job}", { value: coverage_value })
+	  			puts "Sending jenkins-codecoverage-change-#{jenkins_job}, current: #{current_coverage_values[jenkins_job]}, last: #{last_coverage_value}"
+	  			send_event("jenkins-codecoverage-change-#{jenkins_job}", { current: current_coverage_values[jenkins_job], last: last_coverage_value })
 	  		else
 	  			puts "#{jenkins_job} status was FAILED. Skipping coverage results for this job."
 	  		end
-		rescue
-			puts "Could not reach jenkins for #{jenkins_job}!"
+		rescue Exception => e
+			puts "Could not reach jenkins for #{jenkins_job}!  Problem: #{e.message}"
 			send_event("jenkins-codecoverage-#{jenkins_job}", { value: "error" })
+			send_event("jenkins-codecoverage-change-#{jenkins_job}", { current: "error" })
 		end
 	end
 end
