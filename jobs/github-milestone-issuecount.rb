@@ -22,7 +22,9 @@ end
 
 ### begin scheduling
 # :first_in sets how long it takes before the job is first run. In this case, it is run immediately
-SCHEDULER.every '15m', :first_in => 0 do |job|
+# run job at every 15 minute mark
+SCHEDULER.cron '*/15 * * * *' do |job|
+#SCHEDULER.every '15m', :first_in => 0 do |job|
   now = Time.now
 
   ###
