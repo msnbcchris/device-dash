@@ -21,6 +21,7 @@ jenkins_jobs = [
 jenkins_jobs.each do |jj|
 	current_coverage_values[jj] = 0
 end
+first_run = true
 
 # :first_in sets how long it takes before the job is first run. In this case, it is run immediately
 # run job at 9am, 12, 3pm and 6pm
@@ -78,7 +79,12 @@ SCHEDULER.cron '0 9,12,15,18 * * *' do |job|
 	#				puts "#{coverageURI}: #{coverageResults["methodCoverage"]["percentage"]}"
 					coverage_value = coverageResults["methodCoverage"]["percentageFloat"]
 				end
-				last_coverage_value = current_coverage_values[jenkins_job]
+				#hack to get first run to display 'difference' properly. otherwise will be blank.
+				if first_run
+					last_coverage_value = coverage_value
+				else
+					last_coverage_value = current_coverage_values[jenkins_job]
+				end
 				current_coverage_values[jenkins_job] = coverage_value #full-precision float
 				coverage_value = coverage_value.round() #rounded to the nearest 1
 				puts "Sending jenkins-codecoverage-#{jenkins_job}, value: #{coverage_value}"
@@ -94,4 +100,5 @@ SCHEDULER.cron '0 9,12,15,18 * * *' do |job|
 			send_event("jenkins-codecoverage-change-#{jenkins_job}", { current: "error" })
 		end
 	end
+	first_run = false
 end
