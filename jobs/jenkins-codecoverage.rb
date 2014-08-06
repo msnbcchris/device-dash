@@ -23,7 +23,9 @@ jenkins_jobs.each do |jj|
 end
 
 # :first_in sets how long it takes before the job is first run. In this case, it is run immediately
-SCHEDULER.every '15m', :first_in => 0 do |job|
+# run job at 9am, 12, 3pm and 6pm
+SCHEDULER.cron '0 9,12,15,18 * * *' do |job|
+#SCHEDULER.every '15m', :first_in => 0 do |job|
 	jenkins_jobs.each do |jenkins_job|
 		#first, check jenkins reachability
 		uri = URI.parse(uriJenkins)
