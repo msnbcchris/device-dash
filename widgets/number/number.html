@@ -1,10 +1,10 @@
 <h1 class="title" data-bind="title"></h1>
 <br>
 
-<h2 class="value" data-bind="current | shortenedNumber | prepend prefix | append suffix" data-bind-diff-precision="diffprecision"></h2>
+<h2 class="value" data-bind="current | shortenedNumber | prepend prefix | append suffix"></h2>
 
 <p class="change-rate">
-  <i data-bind-class="arrow"></i><span data-bind="difference"></span>
+  <i data-bind-class="arrow"></i><span data-bind="difference" data-bind-diff-precision="diffprecision"></span>
 </p>
 
 <p class="more-info" data-bind="moreinfo"></p>
