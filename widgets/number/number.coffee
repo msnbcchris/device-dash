@@ -3,20 +3,28 @@ class Dashing.Number extends Dashing.Widget
 
   @accessor 'difference', ->
     if @get('last')
-      last = parseInt(@get('last'))
-      current = parseInt(@get('current'))
+      precision = parseInt(@get('diffprecision'))
+      last = if precision then parseFloat(@get('last')) else parseInt(@get('last'))
+      current = if precision then parseFloat(@get('current')) else parseInt(@get('current'))
       if last != 0
-        diff = Math.abs(Math.round((current - last) / last * 100))
-        "#{diff}%"
+        diff = Math.abs((current - last) / last * 100)
+        diff = Math.round(diff) unless precision
+        if precision
+          "#{diff.toFixed(precision)}%"
+        else
+          "#{diff}%"
     else
       ""
 
   @accessor 'arrow', ->
     if @get('last')
-      if parseInt(@get('current')) == parseInt(@get('last'))
+      precision = parseInt(@get('diffprecision'))
+      last = if precision then parseFloat(@get('last')) else parseInt(@get('last'))
+      current = if precision then parseFloat(@get('current')) else parseInt(@get('current'))
+      if current == last
         'icon-ellipsis-horizontal'
       else
-        if parseInt(@get('current')) > parseInt(@get('last')) then 'icon-arrow-up' else 'icon-arrow-down'
+        if current > last then 'icon-arrow-up' else 'icon-arrow-down'
 
   onData: (data) ->
     if data.status

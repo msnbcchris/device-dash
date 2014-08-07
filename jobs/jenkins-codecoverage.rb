@@ -86,7 +86,7 @@ SCHEDULER.cron '0 9,12,15,18 * * *' do |job|
 					last_coverage_value = current_coverage_values[jenkins_job]
 				end
 				current_coverage_values[jenkins_job] = coverage_value #full-precision float
-				coverage_value = coverage_value.round() #rounded to the nearest 1
+				coverage_value = coverage_value.round(1) #rounded to the nearest 10th
 				puts "Sending jenkins-codecoverage-#{jenkins_job}, value: #{coverage_value}"
 	  			send_event("jenkins-codecoverage-#{jenkins_job}", { value: coverage_value })
 	  			puts "Sending jenkins-codecoverage-change-#{jenkins_job}, current: #{current_coverage_values[jenkins_job]}, last: #{last_coverage_value}"

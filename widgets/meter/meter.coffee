@@ -8,7 +8,7 @@ class Dashing.Meter extends Dashing.Widget
       meter = $(@node).find(".meter")
       meter.val(value).trigger('change')
       if @get('criticalvalue')
-        if parseInt(value) > @get('criticalvalue')
+        if parseFloat(value) >= @get('criticalvalue')
           statuscolor = "chartreuse"
         else
           statuscolor = "red"
