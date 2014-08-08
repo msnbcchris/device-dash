@@ -3,12 +3,10 @@ uriJenkins = "http://172.27.5.44:8080" #dtap
 uriPrefix = uriJenkins + "/job/"
 uriSuffixIOS = "/lastCompletedBuild/cobertura/api/json?tree=results[elements[name,ratio]]"
 uriSuffixAndroid = "/lastCompletedBuild/emma/api/json"
-uriSuffixStatus = "/lastCompletedBuild/api/json?tree=result"
+uriSuffixStatus = "/lastCompletedBuild/api/json?tree=result,number"
 
 coverage_type_ios = :cobertura
 coverage_type_android = :emma
-
-current_coverage_values = {}
 
 jenkins_jobs = [
 	"Unit-NEWS-iOS",
@@ -18,15 +16,18 @@ jenkins_jobs = [
 ]
 
 #some initialization
+first_run = true
+current_coverage_values = {}
+lastBuildNumbers = {}
 jenkins_jobs.each do |jj|
 	current_coverage_values[jj] = 0
+	lastBuildNumbers[jj] = 0
 end
-first_run = true
 
 # :first_in sets how long it takes before the job is first run. In this case, it is run immediately
 # run job at 9am, 12, 3pm and 6pm
-SCHEDULER.cron '0 9,12,15,18 * * *' do |job|
-#SCHEDULER.every '15m', :first_in => 0 do |job|
+#SCHEDULER.cron '0 9,12,15,18 * * *' do |job|
+SCHEDULER.every '3m', :first_in => 0 do |job|
 	jenkins_jobs.each do |jenkins_job|
 		#first, check jenkins reachability
 		uri = URI.parse(uriJenkins)
@@ -49,51 +50,54 @@ SCHEDULER.cron '0 9,12,15,18 * * *' do |job|
 				next
 			end
 
-			#check status of this jenkins job to make sure it didn't fail. there are no results if it failed.
+			#check status and build number of this jenkins job to make sure a) we haven't already processed this build and b) it didn't fail (there are no results if it failed)
 			uri = URI.parse(statusURI)
 			str = uri.read
 			status = JSON.parse(str)
-			if status["result"] == "SUCCESS"
+			if status["number"] != lastBuildNumbers[jenkins_job]
+				lastBuildNumbers[jenkins_job] = status["number"]
+				if status["result"] == "SUCCESS"
 
-				#grab code coverage results for this jenkins job
-				uri = URI.parse(coverageURI)
-				str = uri.read
-				coverageResults = JSON.parse(str)
+					#grab code coverage results for this jenkins job
+					uri = URI.parse(coverageURI)
+					str = uri.read
+					coverageResults = JSON.parse(str)
 
-				#
-				coverage_value = 0
-				if coverage_type == coverage_type_ios
-					#iOS
-					#result is array of hashes with "name" and "ratio".  we need to iterate through and grab the "Lines" ratio
-	#				puts "#{coverageURI}: #{coverageResults["results"]["elements"]}"
-					results = coverageResults["results"]["elements"]
-					results.each do |result|
-						if result["name"] == "Lines"
-							coverage_value = result["ratio"]
-							break
+					#
+					coverage_value = 0
+					if coverage_type == coverage_type_ios
+						#iOS
+						#result is array of hashes with "name" and "ratio".  we need to iterate through and grab the "Lines" ratio
+	#					puts "#{coverageURI}: #{coverageResults["results"]["elements"]}"
+						results = coverageResults["results"]["elements"]
+						results.each do |result|
+							if result["name"] == "Lines"
+								coverage_value = result["ratio"]
+								break
+							end
 						end
+					elsif coverage_type == coverage_type_android
+						#Android
+						#result is coverage percentage
+	#					puts "#{coverageURI}: #{coverageResults["methodCoverage"]["percentage"]}"
+						coverage_value = coverageResults["methodCoverage"]["percentageFloat"]
 					end
-				elsif coverage_type == coverage_type_android
-					#Android
-					#result is coverage percentage
-	#				puts "#{coverageURI}: #{coverageResults["methodCoverage"]["percentage"]}"
-					coverage_value = coverageResults["methodCoverage"]["percentageFloat"]
-				end
-				#hack to get first run to display 'difference' properly. otherwise will be blank.
-				if first_run
-					last_coverage_value = coverage_value
-				else
-					last_coverage_value = current_coverage_values[jenkins_job]
-				end
-				current_coverage_values[jenkins_job] = coverage_value #full-precision float
-				coverage_value = coverage_value.round(1) #rounded to the nearest 10th
-				puts "Sending jenkins-codecoverage-#{jenkins_job}, value: #{coverage_value}"
-	  			send_event("jenkins-codecoverage-#{jenkins_job}", { value: coverage_value })
-	  			puts "Sending jenkins-codecoverage-change-#{jenkins_job}, current: #{current_coverage_values[jenkins_job]}, last: #{last_coverage_value}"
-	  			send_event("jenkins-codecoverage-change-#{jenkins_job}", { current: current_coverage_values[jenkins_job], last: last_coverage_value })
-	  		else
-	  			puts "#{jenkins_job} status was FAILED. Skipping coverage results for this job."
-	  		end
+					#hack to get first run to display 'difference' properly. otherwise will be blank.
+					if first_run
+						last_coverage_value = coverage_value
+					else
+						last_coverage_value = current_coverage_values[jenkins_job]
+					end
+					current_coverage_values[jenkins_job] = coverage_value #full-precision float
+					coverage_value = coverage_value.round(1) #rounded to the nearest 10th
+					puts "Sending jenkins-codecoverage-#{jenkins_job}, value: #{coverage_value}"
+		  			send_event("jenkins-codecoverage-#{jenkins_job}", { value: coverage_value })
+		  			puts "Sending jenkins-codecoverage-change-#{jenkins_job}, current: #{current_coverage_values[jenkins_job]}, last: #{last_coverage_value}"
+		  			send_event("jenkins-codecoverage-change-#{jenkins_job}", { current: current_coverage_values[jenkins_job], last: last_coverage_value })
+		  		else
+		  			puts "#{jenkins_job} status was FAILED. Skipping coverage results for this job."
+		  		end
+		  	end
 		rescue Exception => e
 			puts "Could not reach jenkins for #{jenkins_job}!  Problem: #{e.message}"
 			send_event("jenkins-codecoverage-#{jenkins_job}", { value: "error" })
