@@ -11,8 +11,10 @@ coverage_type_android = :emma
 jenkins_jobs = [
 	"Unit-NEWS-iOS",
 	"Unit-TODAY-iOS",
+	"Unit-Nightly-iOS",
 	"Unit-NEWS-Android",
-	"Unit-TODAY-Android"
+	"Unit-TODAY-Android",
+	"Unit-Nightly-Android"
 ]
 
 #some initialization
